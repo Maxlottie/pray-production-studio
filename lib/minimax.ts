@@ -1,9 +1,10 @@
 /**
- * Minimax API integration for video generation
+ * Minimax API integration for video generation (Hailuo)
  * Primary video generation provider
+ * API Docs: https://platform.minimax.io/docs/api-reference/video-generation
  */
 
-const MINIMAX_API_BASE = "https://api.minimax.chat/v1"
+const MINIMAX_API_BASE = "https://api.minimax.io/v1"
 
 export interface MinimaxVideoOptions {
   imageUrl: string
@@ -32,8 +33,8 @@ export async function generateVideo(
   }
 
   try {
-    // Minimax video generation API call
-    const response = await fetch(`${MINIMAX_API_BASE}/video/generate`, {
+    // Minimax Hailuo video generation API call
+    const response = await fetch(`${MINIMAX_API_BASE}/video_generation`, {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${apiKey}`,
@@ -41,21 +42,22 @@ export async function generateVideo(
       },
       body: JSON.stringify({
         model: "video-01",
-        image_url: imageUrl,
+        first_frame_image: imageUrl,
         prompt: prompt || `Subtle ${motionType} camera movement, cinematic, epic biblical scene`,
-        motion_strength: motionType === "subtle" ? 0.3 : 0.6,
       }),
     })
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
-      throw new Error(errorData.message || `Minimax API error: ${response.status}`)
+      console.error("Minimax API error response:", errorData)
+      throw new Error(errorData.base_resp?.status_msg || errorData.message || `Minimax API error: ${response.status}`)
     }
 
     const data = await response.json()
+    console.log("Minimax API success response:", data)
 
     return {
-      taskId: data.task_id || data.id,
+      taskId: data.task_id,
       status: "pending",
     }
   } catch (error) {
@@ -76,7 +78,7 @@ export async function checkVideoStatus(
   }
 
   try {
-    const response = await fetch(`${MINIMAX_API_BASE}/video/status/${taskId}`, {
+    const response = await fetch(`${MINIMAX_API_BASE}/query/video_generation?task_id=${taskId}`, {
       method: "GET",
       headers: {
         "Authorization": `Bearer ${apiKey}`,
@@ -86,26 +88,29 @@ export async function checkVideoStatus(
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
-      throw new Error(errorData.message || `Minimax API error: ${response.status}`)
+      console.error("Minimax status check error response:", errorData)
+      throw new Error(errorData.base_resp?.status_msg || errorData.message || `Minimax API error: ${response.status}`)
     }
 
     const data = await response.json()
+    console.log("Minimax status check response:", data)
 
     // Map Minimax status to our status
+    // Minimax uses: Queueing, Processing, Success, Failed
     let status: MinimaxVideoResponse["status"] = "pending"
-    if (data.status === "processing" || data.status === "running") {
-      status = "processing"
-    } else if (data.status === "completed" || data.status === "success") {
+    if (data.status === "Processing" || data.status === "Queueing") {
+      status = data.status === "Queueing" ? "pending" : "processing"
+    } else if (data.status === "Success") {
       status = "completed"
-    } else if (data.status === "failed" || data.status === "error") {
+    } else if (data.status === "Failed") {
       status = "failed"
     }
 
     return {
       taskId,
       status,
-      videoUrl: data.video_url || data.output_url,
-      error: data.error_message,
+      videoUrl: data.file_id ? `https://api.minimax.io/v1/files/retrieve?file_id=${data.file_id}` : undefined,
+      error: data.base_resp?.status_msg,
     }
   } catch (error) {
     console.error("Minimax status check error:", error)
