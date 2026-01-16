@@ -8,8 +8,8 @@ import {
 } from "@/lib/prompts/image-prompt-builder"
 import type { ShotMood, VisualStyle } from "@prisma/client"
 
-// Number of images to generate per request
-const IMAGES_PER_GENERATION = 4
+// Number of images to generate per request (reduced to 2 for faster generation)
+const IMAGES_PER_GENERATION = 2
 
 export async function POST(request: NextRequest) {
   try {
@@ -71,8 +71,8 @@ export async function POST(request: NextRequest) {
       where: { shotId: shot.id },
     })
 
-    // Calculate how many images to generate (fill up to 4)
-    const imagesToGenerate = Math.min(count, 4 - existingImagesCount)
+    // Calculate how many images to generate (fill up to 2)
+    const imagesToGenerate = Math.min(count, 2 - existingImagesCount)
 
     if (imagesToGenerate <= 0) {
       return NextResponse.json({

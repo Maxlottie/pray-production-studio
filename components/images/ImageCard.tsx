@@ -17,9 +17,9 @@ import { cn } from "@/lib/utils"
 import { getDisplayUrl } from "@/lib/image-url"
 import type { Shot, ImageGeneration } from "@prisma/client"
 
-// Estimated time for generating 4 images (in seconds)
-// Based on real-world testing: ~60-70 seconds for 4 parallel image generations
-const ESTIMATED_GENERATION_TIME = 70
+// Estimated time for generating 2 images (in seconds)
+// Based on real-world testing: ~30-40 seconds for 2 parallel image generations
+const ESTIMATED_GENERATION_TIME = 35
 
 // Use serialized types where Decimal is converted to number for client components
 type SerializedShot = Omit<Shot, "duration"> & { duration: number }
@@ -192,7 +192,7 @@ export function ImageCard({
           {isGenerating && !hasImages ? (
             <div className="bg-primary/5 border-2 border-dashed border-accent/30 rounded-md flex flex-col items-center justify-center gap-4 p-8">
               <Loader2 className="h-10 w-10 animate-spin text-accent" />
-              <span className="text-[#2d2d2d] text-sm font-medium">Generating 4 images...</span>
+              <span className="text-[#2d2d2d] text-sm font-medium">Generating 2 images...</span>
 
               {/* Progress bar */}
               <div className="w-full max-w-[220px]">
@@ -210,7 +210,7 @@ export function ImageCard({
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-2">
-              {[0, 1, 2, 3].map((index) => {
+              {[0, 1].map((index) => {
                 const image = shot.images[index]
 
                 if (image) {

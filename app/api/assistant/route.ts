@@ -59,8 +59,8 @@ async function generateImagesForShot(
       process.env.AWS_ACCESS_KEY_ID !== "your_aws_access_key"
     )
 
-    // Generate 4 images in parallel
-    const imagesToGenerate = 4
+    // Generate 2 images in parallel (faster)
+    const imagesToGenerate = 2
     console.log(`[Assistant] Generating ${imagesToGenerate} images for shot ${shot.shotIndex + 1}`)
 
     const generationPromises = Array.from({ length: imagesToGenerate }, async (_, index) => {
