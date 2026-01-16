@@ -1,15 +1,14 @@
 import { AppShell } from "@/components/layout/AppShell"
 import { Header } from "@/components/layout/Header"
 import { ShotsPageClient } from "@/components/shots/ShotsPageClient"
-import { getSession } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { prisma } from "@/lib/prisma"
 
-async function getProjectWithShots(projectId: string, userId: string) {
+// Auth temporarily disabled
+async function getProjectWithShots(projectId: string) {
   const project = await prisma.project.findFirst({
     where: {
       id: projectId,
-      createdById: userId,
     },
     include: {
       scripts: {
@@ -34,13 +33,8 @@ export default async function ShotsPage({
 }: {
   params: { projectId: string }
 }) {
-  const session = await getSession()
-
-  if (!session?.user?.id) {
-    redirect("/login")
-  }
-
-  const projectRaw = await getProjectWithShots(params.projectId, session.user.id)
+  // Auth temporarily disabled
+  const projectRaw = await getProjectWithShots(params.projectId)
 
   if (!projectRaw) {
     redirect("/dashboard")

@@ -1,7 +1,6 @@
 import { AppShell } from "@/components/layout/AppShell"
 import { Header } from "@/components/layout/Header"
 import { AudioPageClient } from "@/components/audio/AudioPageClient"
-import { getSession } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { prisma } from "@/lib/prisma"
 
@@ -10,18 +9,12 @@ export default async function AudioPage({
 }: {
   params: Promise<{ projectId: string }>
 }) {
-  const session = await getSession()
-
-  if (!session?.user?.id) {
-    redirect("/login")
-  }
-
   const { projectId } = await params
 
+  // Auth temporarily disabled
   const project = await prisma.project.findFirst({
     where: {
       id: projectId,
-      createdById: session.user.id,
     },
     include: {
       scripts: {

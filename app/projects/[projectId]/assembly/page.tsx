@@ -1,7 +1,6 @@
 import { AppShell } from "@/components/layout/AppShell"
 import { Header } from "@/components/layout/Header"
 import { AssemblyPageClient } from "@/components/assembly/AssemblyPageClient"
-import { getSession } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { prisma } from "@/lib/prisma"
 
@@ -10,18 +9,12 @@ export default async function AssemblyPage({
 }: {
   params: Promise<{ projectId: string }>
 }) {
-  const session = await getSession()
-
-  if (!session?.user?.id) {
-    redirect("/login")
-  }
-
   const { projectId } = await params
 
+  // Auth temporarily disabled
   const projectRaw = await prisma.project.findFirst({
     where: {
       id: projectId,
-      createdById: session.user.id,
     },
     include: {
       scenes: {
