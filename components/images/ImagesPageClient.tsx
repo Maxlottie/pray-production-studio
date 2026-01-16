@@ -14,7 +14,9 @@ import { PromptEditor } from "./PromptEditor"
 import { getDisplayUrl } from "@/lib/image-url"
 import type { Scene, Shot, ImageGeneration, Project } from "@prisma/client"
 
-type ShotWithImages = Shot & { images: ImageGeneration[] }
+// Use serialized types where Decimal is converted to number for client components
+type SerializedShot = Omit<Shot, "duration"> & { duration: number }
+type ShotWithImages = SerializedShot & { images: ImageGeneration[] }
 type SceneWithShots = Scene & { shots: ShotWithImages[] }
 
 interface ImagesPageClientProps {

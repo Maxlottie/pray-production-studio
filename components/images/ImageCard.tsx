@@ -21,8 +21,11 @@ import type { Shot, ImageGeneration } from "@prisma/client"
 // Based on real-world testing: ~60-70 seconds for 4 parallel image generations
 const ESTIMATED_GENERATION_TIME = 70
 
+// Use serialized types where Decimal is converted to number for client components
+type SerializedShot = Omit<Shot, "duration"> & { duration: number }
+
 interface ImageCardProps {
-  shot: Shot & { images: ImageGeneration[] }
+  shot: SerializedShot & { images: ImageGeneration[] }
   sceneTitle: string
   aspectRatio: "LANDSCAPE" | "PORTRAIT"
   onGenerate: (shotId: string) => void

@@ -3,7 +3,9 @@
 import { ImageCard } from "./ImageCard"
 import type { Scene, Shot, ImageGeneration } from "@prisma/client"
 
-type ShotWithImages = Shot & { images: ImageGeneration[] }
+// Use serialized types where Decimal is converted to number for client components
+type SerializedShot = Omit<Shot, "duration"> & { duration: number }
+type ShotWithImages = SerializedShot & { images: ImageGeneration[] }
 type SceneWithShots = Scene & { shots: ShotWithImages[] }
 
 interface ImageGridProps {

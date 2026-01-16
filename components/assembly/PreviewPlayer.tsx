@@ -7,7 +7,9 @@ import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import type { Shot, VideoGeneration, ImageGeneration } from "@prisma/client"
 
-type ShotWithMedia = Shot & {
+// Use serialized types where Decimal is converted to number for client components
+type SerializedShot = Omit<Shot, "duration"> & { duration: number }
+type ShotWithMedia = SerializedShot & {
   images: ImageGeneration[]
   videos: VideoGeneration[]
 }
