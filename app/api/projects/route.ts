@@ -6,15 +6,18 @@ import { AspectRatio } from "@prisma/client"
 // Helper to get or create a demo user (auth temporarily disabled)
 async function getDemoUserId(): Promise<string> {
   const demoEmail = "demo@pray.com"
-  let user = await prisma.user.findUnique({ where: { email: demoEmail } })
-  if (!user) {
-    user = await prisma.user.create({
-      data: {
-        email: demoEmail,
-        name: "Demo User",
-      },
-    })
-  }
+
+  // Use upsert to handle race conditions
+  const user = await prisma.user.upsert({
+    where: { email: demoEmail },
+    update: {}, // Don't update anything if exists
+    create: {
+      email: demoEmail,
+      name: "Demo User",
+    },
+  })
+
+  console.log("[API] Using demo user:", user.id)
   return user.id
 }
 
