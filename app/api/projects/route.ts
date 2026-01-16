@@ -68,7 +68,32 @@ export async function POST(request: NextRequest) {
     const session = await getSession()
 
     // Auth temporarily disabled - use demo user if no session
-    const userId = session?.user?.id || await getDemoUserId()
+    let userId: string
+
+    if (session?.user?.id) {
+      userId = session.user.id
+      console.log("[API] Using session user:", userId)
+    } else {
+      // Create demo user first, then get ID
+      try {
+        const demoUser = await prisma.user.upsert({
+          where: { email: "demo@pray.com" },
+          update: {},
+          create: {
+            email: "demo@pray.com",
+            name: "Demo User",
+          },
+        })
+        userId = demoUser.id
+        console.log("[API] Created/found demo user:", userId)
+      } catch (userError) {
+        console.error("[API] Failed to create demo user:", userError)
+        return NextResponse.json(
+          { error: `Failed to create demo user: ${userError instanceof Error ? userError.message : "Unknown"}` },
+          { status: 500 }
+        )
+      }
+    }
 
     const body = await request.json()
     const { title, aspectRatio } = body
@@ -90,6 +115,17 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       )
     }
+
+    // Verify user exists before creating project
+    const userExists = await prisma.user.findUnique({ where: { id: userId } })
+    if (!userExists) {
+      console.error("[API] User not found with ID:", userId)
+      return NextResponse.json(
+        { error: `User not found: ${userId}` },
+        { status: 500 }
+      )
+    }
+    console.log("[API] Verified user exists:", userExists.email)
 
     const project = await prisma.project.create({
       data: {
