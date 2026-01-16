@@ -30,7 +30,7 @@ interface ImageCardProps {
   aspectRatio: "LANDSCAPE" | "PORTRAIT"
   onGenerate: (shotId: string) => void
   onSelectImage: (shotId: string, imageId: string) => void
-  onEditPrompt: (shot: Shot) => void
+  onEditPrompt: (shot: SerializedShot) => void
   onRegenerate: (
     shotId: string,
     type: "single" | "scene" | "forward" | "reference"

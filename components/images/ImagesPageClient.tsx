@@ -27,7 +27,7 @@ interface ImagesPageClientProps {
 export function ImagesPageClient({ project, scenes }: ImagesPageClientProps) {
   const router = useRouter()
   const [generatingShots, setGeneratingShots] = useState<Set<string>>(new Set())
-  const [editingShot, setEditingShot] = useState<Shot | null>(null)
+  const [editingShot, setEditingShot] = useState<SerializedShot | null>(null)
   const [isPromptEditorOpen, setIsPromptEditorOpen] = useState(false)
   const [isGeneratingAll, setIsGeneratingAll] = useState(false)
   const [lightboxImage, setLightboxImage] = useState<{ url: string; shotIndex: number; imageIndex: number } | null>(null)
@@ -136,7 +136,7 @@ export function ImagesPageClient({ project, scenes }: ImagesPageClientProps) {
     }
   }, [router])
 
-  const handleEditPrompt = useCallback((shot: Shot) => {
+  const handleEditPrompt = useCallback((shot: SerializedShot) => {
     setEditingShot(shot)
     setIsPromptEditorOpen(true)
   }, [])
@@ -176,7 +176,7 @@ export function ImagesPageClient({ project, scenes }: ImagesPageClientProps) {
       if (shotIndex === -1) return
 
       const shot = allShots[shotIndex]
-      let shotsToRegenerate: Shot[] = []
+      let shotsToRegenerate: ShotWithImages[] = []
 
       if (type === "scene") {
         // Regenerate remaining shots in scene

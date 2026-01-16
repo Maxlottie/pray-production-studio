@@ -8,8 +8,11 @@ import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import type { Scene, Shot } from "@prisma/client"
 
+// Use serialized types where Decimal is converted to number for client components
+type SerializedShot = Omit<Shot, "duration"> & { duration: number }
+
 interface SceneHeaderProps {
-  scene: Scene & { shots: Shot[] }
+  scene: Scene & { shots: SerializedShot[] }
   isExpanded: boolean
   onToggle: () => void
   children: React.ReactNode
