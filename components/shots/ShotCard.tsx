@@ -37,16 +37,6 @@ interface ShotCardProps {
   isUpdating?: boolean
 }
 
-const cameraMovementOptions: { value: CameraMovement; label: string }[] = [
-  { value: "STATIC", label: "Static" },
-  { value: "PAN_LEFT", label: "Pan Left" },
-  { value: "PAN_RIGHT", label: "Pan Right" },
-  { value: "ZOOM_IN", label: "Zoom In" },
-  { value: "ZOOM_OUT", label: "Zoom Out" },
-  { value: "PUSH_IN", label: "Push In" },
-  { value: "HAND_HELD", label: "Hand Held" },
-]
-
 const moodOptions: { value: ShotMood; label: string }[] = [
   { value: "DRAMATIC", label: "Dramatic" },
   { value: "PEACEFUL", label: "Peaceful" },
@@ -63,10 +53,18 @@ export function ShotCard({
   isUpdating = false,
 }: ShotCardProps) {
   const [localDescription, setLocalDescription] = useState(shot.description)
+  const [localDuration, setLocalDuration] = useState(shot.duration.toString())
 
   const handleDescriptionBlur = () => {
     if (localDescription !== shot.description) {
       onUpdate(shot.id, { description: localDescription })
+    }
+  }
+
+  const handleDurationBlur = () => {
+    const newDuration = parseFloat(localDuration) || 4
+    if (newDuration !== shot.duration) {
+      onUpdate(shot.id, { duration: newDuration })
     }
   }
 
@@ -133,44 +131,18 @@ export function ShotCard({
         </div>
 
         {/* Controls */}
-        <div className="grid grid-cols-3 gap-3">
-          {/* Camera Movement */}
-          <div>
-            <label className="text-xs font-medium text-[#6b6b6b] mb-1 block">
-              Camera
-            </label>
-            <Select
-              value={shot.cameraMovement}
-              onValueChange={(value) =>
-                onUpdate(shot.id, { cameraMovement: value as CameraMovement })
-              }
-              disabled={isUpdating}
-            >
-              <SelectTrigger className="h-9 text-xs">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {cameraMovementOptions.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
+        <div className="grid grid-cols-2 gap-3">
           {/* Duration */}
           <div>
             <label className="text-xs font-medium text-[#6b6b6b] mb-1 block">
-              Duration
+              Duration (seconds)
             </label>
             <div className="flex items-center gap-1">
               <Input
                 type="number"
-                value={Number(shot.duration)}
-                onChange={(e) =>
-                  onUpdate(shot.id, { duration: parseFloat(e.target.value) || 4 })
-                }
+                value={localDuration}
+                onChange={(e) => setLocalDuration(e.target.value)}
+                onBlur={handleDurationBlur}
                 className="h-9 text-xs"
                 min={1}
                 max={30}

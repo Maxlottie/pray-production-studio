@@ -1,17 +1,11 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { getSession } from "@/lib/auth"
 import { CameraMovement, ShotMood, ShotStatus } from "@prisma/client"
 
 // GET /api/shots?projectId=xxx - Get all shots for a project
 export async function GET(request: NextRequest) {
   try {
-    const session = await getSession()
-
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
-
+    // Auth temporarily disabled for demo
     const { searchParams } = new URL(request.url)
     const projectId = searchParams.get("projectId")
 
@@ -20,18 +14,6 @@ export async function GET(request: NextRequest) {
         { error: "Project ID is required" },
         { status: 400 }
       )
-    }
-
-    // Verify project ownership
-    const project = await prisma.project.findFirst({
-      where: {
-        id: projectId,
-        createdById: session.user.id,
-      },
-    })
-
-    if (!project) {
-      return NextResponse.json({ error: "Project not found" }, { status: 404 })
     }
 
     const shots = await prisma.shot.findMany({
@@ -57,12 +39,7 @@ export async function GET(request: NextRequest) {
 // PATCH /api/shots - Update a shot
 export async function PATCH(request: NextRequest) {
   try {
-    const session = await getSession()
-
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
-
+    // Auth temporarily disabled for demo
     const body = await request.json()
     const { shotId, description, cameraMovement, duration, mood, status } = body
 
@@ -73,15 +50,12 @@ export async function PATCH(request: NextRequest) {
       )
     }
 
-    // Verify ownership through project
+    // Verify shot exists
     const existingShot = await prisma.shot.findUnique({
       where: { id: shotId },
-      include: {
-        project: true,
-      },
     })
 
-    if (!existingShot || existingShot.project.createdById !== session.user.id) {
+    if (!existingShot) {
       return NextResponse.json({ error: "Shot not found" }, { status: 404 })
     }
 
@@ -160,12 +134,7 @@ export async function PATCH(request: NextRequest) {
 // POST /api/shots/approve-all - Approve all shots for a project
 export async function POST(request: NextRequest) {
   try {
-    const session = await getSession()
-
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
-
+    // Auth temporarily disabled for demo
     const body = await request.json()
     const { projectId, action } = body
 
@@ -174,18 +143,6 @@ export async function POST(request: NextRequest) {
         { error: "Project ID is required" },
         { status: 400 }
       )
-    }
-
-    // Verify project ownership
-    const project = await prisma.project.findFirst({
-      where: {
-        id: projectId,
-        createdById: session.user.id,
-      },
-    })
-
-    if (!project) {
-      return NextResponse.json({ error: "Project not found" }, { status: 404 })
     }
 
     if (action === "approve-all") {
