@@ -182,10 +182,10 @@ export function ShotsPageClient({ project }: ShotsPageClientProps) {
                 {isParsing ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Parsing Script...
+                    Greenlighting...
                   </>
                 ) : (
-                  "Parse Script & Generate Shots"
+                  "Greenlight Script"
                 )}
               </Button>
             </div>
