@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation"
 import { prisma } from "@/lib/prisma"
-import { getSession } from "@/lib/auth"
 import { AppShell } from "@/components/layout/AppShell"
 import { Header } from "@/components/layout/Header"
 import { ProjectTabs } from "@/components/projects/ProjectTabs"
@@ -10,11 +9,11 @@ import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { Music, Film, Image, Video, Layers, ArrowRight, Check } from "lucide-react"
 
-async function getProject(projectId: string, userId: string) {
+// Auth temporarily disabled - find project by ID only
+async function getProject(projectId: string) {
   const project = await prisma.project.findFirst({
     where: {
       id: projectId,
-      createdById: userId,
     },
     include: {
       createdBy: {
@@ -58,13 +57,8 @@ export default async function ProjectPage({
 }: {
   params: { projectId: string }
 }) {
-  const session = await getSession()
-
-  if (!session?.user?.id) {
-    redirect("/login")
-  }
-
-  const project = await getProject(params.projectId, session.user.id)
+  // Auth temporarily disabled
+  const project = await getProject(params.projectId)
 
   if (!project) {
     redirect("/dashboard")
