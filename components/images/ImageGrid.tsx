@@ -19,7 +19,9 @@ interface ImageGridProps {
     type: "single" | "scene" | "forward" | "reference"
   ) => void
   onViewImage: (imageUrl: string, shotIndex: number) => void
+  onUpload: (shotId: string, file: File) => void
   generatingShots: Set<string>
+  uploadingShots: Set<string>
 }
 
 export function ImageGrid({
@@ -30,7 +32,9 @@ export function ImageGrid({
   onEditPrompt,
   onRegenerate,
   onViewImage,
+  onUpload,
   generatingShots,
+  uploadingShots,
 }: ImageGridProps) {
   // Flatten all shots with their scene info
   const allShots = scenes.flatMap((scene) =>
@@ -63,7 +67,9 @@ export function ImageGrid({
           onEditPrompt={onEditPrompt}
           onRegenerate={onRegenerate}
           onViewImage={onViewImage}
+          onUpload={onUpload}
           isGenerating={generatingShots.has(shot.id)}
+          isUploading={uploadingShots.has(shot.id)}
         />
       ))}
     </div>

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react"
 import Image from "next/image"
-import { Check, Loader2, ImagePlus, Pencil, MoreVertical } from "lucide-react"
+import { Check, Loader2, ImagePlus, Pencil, MoreVertical, Upload } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -36,7 +36,9 @@ interface ImageCardProps {
     type: "single" | "scene" | "forward" | "reference"
   ) => void
   onViewImage: (imageUrl: string, shotIndex: number) => void
+  onUpload: (shotId: string, file: File) => void
   isGenerating?: boolean
+  isUploading?: boolean
 }
 
 export function ImageCard({
@@ -48,8 +50,21 @@ export function ImageCard({
   onEditPrompt,
   onRegenerate,
   onViewImage,
+  onUpload,
   isGenerating = false,
+  isUploading = false,
 }: ImageCardProps) {
+  // File input ref for upload
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      onUpload(shot.id, file)
+      // Reset the input so the same file can be selected again
+      e.target.value = ""
+    }
+  }
   // Progress bar state
   const [progress, setProgress] = useState(0)
   const [elapsedTime, setElapsedTime] = useState(0)
@@ -255,36 +270,77 @@ export function ImageCard({
                   )
                 }
 
-                // Empty slot (only shown when not generating)
+                // Empty slot - show generate and upload options
                 return (
-                  <button
+                  <div
                     key={index}
-                    onClick={() => onGenerate(shot.id)}
-                    disabled={isGenerating}
                     className={cn(
-                      `${aspectClass} rounded-md border-2 border-dashed border-border flex items-center justify-center transition-colors`,
-                      !isGenerating && "hover:border-accent/50 hover:bg-accent/5"
+                      `${aspectClass} rounded-md border-2 border-dashed border-border flex flex-col items-center justify-center gap-2 transition-colors`,
+                      !isGenerating && !isUploading && "hover:border-accent/30"
                     )}
                   >
-                    <ImagePlus className="h-5 w-5 text-[#9ca3af]" />
-                  </button>
+                    <button
+                      onClick={() => onGenerate(shot.id)}
+                      disabled={isGenerating || isUploading}
+                      className="flex items-center gap-1 text-xs text-[#6b6b6b] hover:text-accent transition-colors"
+                    >
+                      <ImagePlus className="h-4 w-4" />
+                      Generate
+                    </button>
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={isGenerating || isUploading}
+                      className="flex items-center gap-1 text-xs text-[#6b6b6b] hover:text-accent transition-colors"
+                    >
+                      <Upload className="h-4 w-4" />
+                      Upload
+                    </button>
+                  </div>
                 )
               })}
             </div>
           )}
         </div>
 
-        {/* Generate Button - only show when no images and not generating */}
-        {!hasImages && !isGenerating && (
-          <Button
-            variant="secondary"
-            size="sm"
-            className="w-full mt-3"
-            onClick={() => onGenerate(shot.id)}
-          >
-            <ImagePlus className="mr-2 h-4 w-4" />
-            Generate Images
-          </Button>
+        {/* Hidden file input for uploads */}
+        <input
+          type="file"
+          ref={fileInputRef}
+          onChange={handleFileChange}
+          accept="image/*"
+          className="hidden"
+        />
+
+        {/* Generate/Upload Buttons - only show when no images and not generating/uploading */}
+        {!hasImages && !isGenerating && !isUploading && (
+          <div className="flex gap-2 mt-3">
+            <Button
+              variant="secondary"
+              size="sm"
+              className="flex-1"
+              onClick={() => onGenerate(shot.id)}
+            >
+              <ImagePlus className="mr-2 h-4 w-4" />
+              Generate
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <Upload className="mr-2 h-4 w-4" />
+              Upload
+            </Button>
+          </div>
+        )}
+
+        {/* Uploading state */}
+        {isUploading && (
+          <div className="flex items-center justify-center gap-2 mt-3 py-2">
+            <Loader2 className="h-4 w-4 animate-spin text-accent" />
+            <span className="text-sm text-[#6b6b6b]">Uploading...</span>
+          </div>
         )}
       </CardContent>
     </Card>

@@ -27,6 +27,7 @@ interface ImagesPageClientProps {
 export function ImagesPageClient({ project, scenes }: ImagesPageClientProps) {
   const router = useRouter()
   const [generatingShots, setGeneratingShots] = useState<Set<string>>(new Set())
+  const [uploadingShots, setUploadingShots] = useState<Set<string>>(new Set())
   const [editingShot, setEditingShot] = useState<SerializedShot | null>(null)
   const [isPromptEditorOpen, setIsPromptEditorOpen] = useState(false)
   const [isGeneratingAll, setIsGeneratingAll] = useState(false)
@@ -241,6 +242,38 @@ export function ImagesPageClient({ project, scenes }: ImagesPageClientProps) {
     setLightboxImage({ url, shotIndex, imageIndex: imageIndex >= 0 ? imageIndex : 0 })
   }, [allImages])
 
+  const handleUpload = useCallback(async (shotId: string, file: File) => {
+    setUploadingShots((prev) => new Set(prev).add(shotId))
+
+    try {
+      const formData = new FormData()
+      formData.append("file", file)
+      formData.append("shotId", shotId)
+
+      const response = await fetch("/api/images/upload", {
+        method: "POST",
+        body: formData,
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || "Failed to upload image")
+      }
+
+      // Refresh the page data
+      router.refresh()
+    } catch (error) {
+      console.error("Upload error:", error)
+      alert(error instanceof Error ? error.message : "Failed to upload image")
+    } finally {
+      setUploadingShots((prev) => {
+        const next = new Set(prev)
+        next.delete(shotId)
+        return next
+      })
+    }
+  }, [router])
+
   const canContinue = allShots.every((shot) =>
     shot.images.some((img) => img.selected)
   )
@@ -288,7 +321,9 @@ export function ImagesPageClient({ project, scenes }: ImagesPageClientProps) {
         onEditPrompt={handleEditPrompt}
         onRegenerate={handleRegenerate}
         onViewImage={handleViewImage}
+        onUpload={handleUpload}
         generatingShots={generatingShots}
+        uploadingShots={uploadingShots}
       />
 
       {/* Prompt Editor Modal */}
