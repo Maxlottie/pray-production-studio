@@ -1,0 +1,69 @@
+"use client"
+
+import { ImageCard } from "./ImageCard"
+import type { Scene, Shot, ImageGeneration } from "@prisma/client"
+
+type ShotWithImages = Shot & { images: ImageGeneration[] }
+type SceneWithShots = Scene & { shots: ShotWithImages[] }
+
+interface ImageGridProps {
+  scenes: SceneWithShots[]
+  aspectRatio: "LANDSCAPE" | "PORTRAIT"
+  onGenerate: (shotId: string) => void
+  onSelectImage: (shotId: string, imageId: string) => void
+  onEditPrompt: (shot: Shot) => void
+  onRegenerate: (
+    shotId: string,
+    type: "single" | "scene" | "forward" | "reference"
+  ) => void
+  onViewImage: (imageUrl: string, shotIndex: number) => void
+  generatingShots: Set<string>
+}
+
+export function ImageGrid({
+  scenes,
+  aspectRatio,
+  onGenerate,
+  onSelectImage,
+  onEditPrompt,
+  onRegenerate,
+  onViewImage,
+  generatingShots,
+}: ImageGridProps) {
+  // Flatten all shots with their scene info
+  const allShots = scenes.flatMap((scene) =>
+    scene.shots.map((shot) => ({
+      shot,
+      sceneTitle: scene.title,
+    }))
+  )
+
+  if (allShots.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 text-center">
+        <p className="text-[#6b6b6b]">
+          No shots available. Please create shots first in the Shots tab.
+        </p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {allShots.map(({ shot, sceneTitle }) => (
+        <ImageCard
+          key={shot.id}
+          shot={shot}
+          sceneTitle={sceneTitle}
+          aspectRatio={aspectRatio}
+          onGenerate={onGenerate}
+          onSelectImage={onSelectImage}
+          onEditPrompt={onEditPrompt}
+          onRegenerate={onRegenerate}
+          onViewImage={onViewImage}
+          isGenerating={generatingShots.has(shot.id)}
+        />
+      ))}
+    </div>
+  )
+}

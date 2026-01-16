@@ -1,0 +1,350 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+}
+
+// ==================== USER & AUTH ====================
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  emailVerified DateTime?
+  name          String?
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  projects      Project[]
+  accounts      Account[]
+  sessions      Session[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ==================== PROJECT ====================
+
+enum AspectRatio {
+  LANDSCAPE  // 16:9
+  PORTRAIT   // 9:16
+}
+
+enum ProjectStatus {
+  DRAFT
+  IN_PROGRESS
+  COMPLETED
+}
+
+model Project {
+  id          String        @id @default(cuid())
+  title       String
+  aspectRatio AspectRatio   @default(LANDSCAPE)
+  status      ProjectStatus @default(DRAFT)
+  createdById String
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  // Relations
+  createdBy   User          @relation(fields: [createdById], references: [id])
+  scripts     Script[]
+  scenes      Scene[]
+  shots       Shot[]
+  audio       ProjectAudio?
+  assistant   AssistantConversation?
+}
+
+// ==================== SCRIPT ====================
+
+enum ScriptStatus {
+  DRAFT
+  PARSED
+  APPROVED
+}
+
+model Script {
+  id             String       @id @default(cuid())
+  projectId      String
+  version        Int          @default(1)
+  rawText        String       @db.Text
+  sourceFileName String?
+  parsedData     Json?        // Parsed scenes/structure from AI
+  status         ScriptStatus @default(DRAFT)
+  createdAt      DateTime     @default(now())
+
+  // Relations
+  project        Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, version])
+}
+
+// ==================== SCENE ====================
+
+model Scene {
+  id               String   @id @default(cuid())
+  projectId        String
+  sceneIndex       Int
+  title            String
+  location         String?
+  characterIds     String[] // Array of CharacterVariation IDs
+  referenceImageId String?  // For "use as reference" feature
+  createdAt        DateTime @default(now())
+
+  // Relations
+  project          Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  shots            Shot[]
+
+  @@unique([projectId, sceneIndex])
+}
+
+// ==================== SHOT ====================
+
+enum CameraMovement {
+  STATIC
+  PAN_LEFT
+  PAN_RIGHT
+  ZOOM_IN
+  ZOOM_OUT
+  PUSH_IN
+  HAND_HELD
+  CUSTOM
+}
+
+enum ShotMood {
+  DRAMATIC
+  PEACEFUL
+  APOCALYPTIC
+  DIVINE
+  FOREBODING
+  ACTION
+}
+
+enum VisualStyle {
+  PHOTOREALISTIC
+  HYPERREALISTIC_CINEMATIC
+  DRAMATIC_REALISM
+  EPIC_FILM_STILL
+  PAINTERLY_ARTISTIC
+  ANIMATED_STYLIZED
+}
+
+enum ShotStatus {
+  PENDING
+  APPROVED
+}
+
+model Shot {
+  id                   String         @id @default(cuid())
+  projectId            String
+  sceneId              String
+  shotIndex            Int
+  description          String         @db.Text
+  cameraMovement       CameraMovement @default(STATIC)
+  customCameraMovement String?
+  visualStyle          VisualStyle    @default(PHOTOREALISTIC)
+  duration             Decimal        @default(4.0) @db.Decimal(5, 2)
+  mood                 ShotMood       @default(DRAMATIC)
+  status               ShotStatus     @default(PENDING)
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
+
+  // Relations
+  project              Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  scene                Scene          @relation(fields: [sceneId], references: [id], onDelete: Cascade)
+  images               ImageGeneration[]
+  videos               VideoGeneration[]
+
+  @@unique([projectId, shotIndex])
+}
+
+// ==================== IMAGE GENERATION ====================
+
+model ImageGeneration {
+  id        String   @id @default(cuid())
+  shotId    String
+  prompt    String   @db.Text
+  imageUrl  String
+  selected  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  // Relations
+  shot      Shot     @relation(fields: [shotId], references: [id], onDelete: Cascade)
+  videos    VideoGeneration[]
+}
+
+// ==================== VIDEO GENERATION ====================
+
+enum VideoProvider {
+  MINIMAX
+  RUNWAY
+}
+
+enum MotionType {
+  SUBTLE
+  PAN_LEFT
+  PAN_RIGHT
+  ZOOM_IN
+  ZOOM_OUT
+  PUSH_IN
+  HAND_HELD
+  CUSTOM
+}
+
+enum VideoStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+model VideoGeneration {
+  id               String        @id @default(cuid())
+  shotId           String
+  sourceImageId    String
+  provider         VideoProvider @default(MINIMAX)
+  motionType       MotionType    @default(SUBTLE)
+  customMotionType String?
+  videoUrl         String?
+  status           VideoStatus   @default(PENDING)
+  selected         Boolean       @default(false)
+  errorMessage     String?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  // Relations
+  shot             Shot          @relation(fields: [shotId], references: [id], onDelete: Cascade)
+  sourceImage      ImageGeneration @relation(fields: [sourceImageId], references: [id])
+}
+
+// ==================== AUDIO ====================
+
+enum NarrationSource {
+  RECORDED
+  TTS
+  UPLOADED
+}
+
+enum MusicSource {
+  GENERATED
+  UPLOADED
+}
+
+model ProjectAudio {
+  id              String           @id @default(cuid())
+  projectId       String           @unique
+  narrationUrl    String?
+  narrationSource NarrationSource?
+  musicUrl        String?
+  musicSource     MusicSource?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  // Relations
+  project         Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+// ==================== CHARACTER LIBRARY ====================
+
+model Character {
+  id         String              @id @default(cuid())
+  name       String
+  createdAt  DateTime            @default(now())
+  updatedAt  DateTime            @updatedAt
+
+  // Relations
+  variations CharacterVariation[]
+}
+
+enum VariationType {
+  YOUNG
+  ADULT
+  OLD
+  CUSTOM
+}
+
+model CharacterVariation {
+  id           String                    @id @default(cuid())
+  characterId  String
+  type         VariationType             @default(ADULT)
+  customLabel  String?
+  description  String?                   @db.Text
+  createdAt    DateTime                  @default(now())
+
+  // Relations
+  character    Character                 @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  images       CharacterReferenceImage[]
+}
+
+model CharacterReferenceImage {
+  id          String             @id @default(cuid())
+  variationId String
+  imageUrl    String
+  isPrimary   Boolean            @default(false)
+  createdAt   DateTime           @default(now())
+
+  // Relations
+  variation   CharacterVariation @relation(fields: [variationId], references: [id], onDelete: Cascade)
+}
+
+// ==================== STYLE GUIDE ====================
+
+model StyleGuide {
+  id             String   @id @default(cuid())
+  name           String
+  basePrompt     String   @db.Text
+  negativePrompt String   @db.Text
+  isDefault      Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+// ==================== AI ASSISTANT ====================
+
+model AssistantConversation {
+  id        String   @id @default(cuid())
+  projectId String   @unique
+  messages  Json     @default("[]") // Array of message objects
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}

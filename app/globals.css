@@ -1,0 +1,44 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --radius: 0.5rem;
+
+    /* Primary Colors */
+    --color-primary: #1a1a2e;
+    --color-primary-light: #2d2d44;
+    --color-accent: #d4a84b;
+    --color-accent-light: #e6c36a;
+
+    /* Backgrounds */
+    --color-bg-main: #f8f7f4;
+    --color-bg-surface: #ffffff;
+    --color-bg-sidebar: #1a1a2e;
+
+    /* Text */
+    --color-text-primary: #2d2d2d;
+    --color-text-secondary: #6b6b6b;
+    --color-text-muted: #9ca3af;
+    --color-text-inverse: #ffffff;
+
+    /* Borders */
+    --color-border: #e5e5e5;
+    --color-border-focus: #d4a84b;
+
+    /* Shadows */
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07);
+    --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-[#2d2d2d];
+  }
+}
