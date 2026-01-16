@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
-import { Loader2, Sparkles, ChevronLeft, ChevronRight, X } from "lucide-react"
+import { Loader2, Sparkles, ChevronLeft, ChevronRight, X, Bot } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -12,6 +12,7 @@ import {
 import { ImageGrid } from "./ImageGrid"
 import { PromptEditor } from "./PromptEditor"
 import { getDisplayUrl } from "@/lib/image-url"
+import { useAssistantContextOptional } from "@/components/assistant/AssistantContext"
 import type { Scene, Shot, ImageGeneration, Project } from "@prisma/client"
 
 // Use serialized types where Decimal is converted to number for client components
@@ -26,6 +27,8 @@ interface ImagesPageClientProps {
 
 export function ImagesPageClient({ project, scenes }: ImagesPageClientProps) {
   const router = useRouter()
+  const assistantContext = useAssistantContextOptional()
+  const isAssistantWorking = assistantContext?.isAssistantWorking ?? false
   const [generatingShots, setGeneratingShots] = useState<Set<string>>(new Set())
   const [uploadingShots, setUploadingShots] = useState<Set<string>>(new Set())
   const [editingShot, setEditingShot] = useState<SerializedShot | null>(null)
@@ -280,6 +283,18 @@ export function ImagesPageClient({ project, scenes }: ImagesPageClientProps) {
 
   return (
     <div className="space-y-6">
+      {/* Assistant Working Banner */}
+      {isAssistantWorking && (
+        <div className="flex items-center gap-3 px-4 py-3 bg-accent/10 border border-accent/30 rounded-lg animate-pulse">
+          <Bot className="h-5 w-5 text-accent animate-bounce" />
+          <div className="flex-1">
+            <span className="text-sm font-medium text-[#2d2d2d]">AI Assistant is working on your request...</span>
+            <span className="text-xs text-[#6b6b6b] ml-2">This may take a moment if generating images.</span>
+          </div>
+          <Loader2 className="h-4 w-4 text-accent animate-spin" />
+        </div>
+      )}
+
       {/* Progress Header */}
       <div className="flex items-center justify-between">
         <div>

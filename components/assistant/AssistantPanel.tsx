@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { MessageList } from "./MessageList"
 import { cn } from "@/lib/utils"
+import { useAssistantContext } from "./AssistantContext"
 
 interface Message {
   role: "user" | "assistant"
@@ -31,6 +32,7 @@ export function AssistantPanel({
   onRefresh,
 }: AssistantPanelProps) {
   const router = useRouter()
+  const { setIsAssistantWorking } = useAssistantContext()
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
@@ -83,6 +85,7 @@ export function AssistantPanel({
     setMessages((prev) => [...prev, userMessage])
     setInput("")
     setIsLoading(true)
+    setIsAssistantWorking(true)
 
     try {
       const response = await fetch("/api/assistant", {
@@ -131,8 +134,9 @@ export function AssistantPanel({
       setMessages((prev) => [...prev, errorMessage])
     } finally {
       setIsLoading(false)
+      setIsAssistantWorking(false)
     }
-  }, [input, isLoading, projectId, messages, currentPage, onRefresh, router])
+  }, [input, isLoading, projectId, messages, currentPage, onRefresh, router, setIsAssistantWorking])
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {

@@ -17,8 +17,8 @@ import {
   getStyleGuideComponents,
 } from "@/lib/prompts/image-prompt-builder"
 
-// Get the technical base as master style
-const { technicalBase: MASTER_STYLE_PROMPT } = getStyleGuideComponents()
+// Get the technical close as master style
+const { technicalClose: MASTER_STYLE_PROMPT } = getStyleGuideComponents()
 
 export default async function SettingsPage() {
   const session = await getSession()

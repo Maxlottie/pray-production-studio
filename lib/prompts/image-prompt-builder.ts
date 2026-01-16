@@ -38,21 +38,57 @@ export const VISUAL_STYLE_DESCRIPTIONS: Record<VisualStyle, string> = {
 }
 
 /**
- * Mood modifiers - emotional tone of the scene
+ * Mood prefixes - the opening mood word for prompts
  */
-export const MOOD_MODIFIERS: Record<ShotMood, string> = {
-  DRAMATIC: "dramatic cinematic scene, warm dying light mixing with growing shadows, intense emotional moment",
-  PEACEFUL: "serene atmosphere, golden hour lighting, tranquil, soft ethereal glow, calm and contemplative",
-  APOCALYPTIC: "apocalyptic cinematic scene, foreboding, haunting atmosphere, ominous skies, end times feeling",
-  DIVINE: "divine light, heavenly radiance, ethereal glow, rays of holy light, sacred and transcendent",
-  FOREBODING: "ominous atmosphere, dark shadows, building tension, threatening skies, sense of dread",
-  ACTION: "dynamic composition, motion energy, intensity, dramatic movement, urgent and powerful",
+export const MOOD_PREFIX: Record<ShotMood, string> = {
+  DRAMATIC: "Dramatic",
+  PEACEFUL: "Peaceful",
+  APOCALYPTIC: "Apocalyptic",
+  DIVINE: "Divine",
+  FOREBODING: "Foreboding",
+  ACTION: "Intense",
 }
 
 /**
- * Technical base for all prompts - applied to all styles
+ * Atmospheric elements by mood
  */
-const TECHNICAL_BASE = "8k resolution, cinematic lighting, biblical era"
+export const MOOD_ATMOSPHERE: Record<ShotMood, string> = {
+  DRAMATIC: "warm dying light mixing with growing shadows, shafts of golden light piercing through",
+  PEACEFUL: "soft golden hour glow, gentle diffused light, calm stillness in the air",
+  APOCALYPTIC: "ominous storm clouds gathering, eerie dim light, dust particles in the air",
+  DIVINE: "radiant heavenly light breaking through clouds, ethereal glow surrounding the scene",
+  FOREBODING: "dark shadows creeping in, threatening overcast sky, oppressive stillness",
+  ACTION: "dynamic lighting with motion blur, dust kicked up, energy crackling in the air",
+}
+
+/**
+ * Emotional/spiritual tone by mood
+ */
+export const MOOD_EMOTIONAL_TONE: Record<ShotMood, string> = {
+  DRAMATIC: "intense emotional weight, pivotal moment, raw human emotion",
+  PEACEFUL: "serene contemplation, inner peace, spiritual tranquility",
+  APOCALYPTIC: "existential dread, world-ending gravity, overwhelming scale of destruction",
+  DIVINE: "sacred transcendence, holy presence, awe-inspiring reverence",
+  FOREBODING: "mounting tension, impending doom, unsettling anticipation",
+  ACTION: "urgent desperation, life-or-death stakes, primal survival instinct",
+}
+
+/**
+ * Color palette suggestions by mood
+ */
+export const MOOD_COLOR_PALETTE: Record<ShotMood, string> = {
+  DRAMATIC: "warm amber and deep shadow tones",
+  PEACEFUL: "soft golds, warm earth tones, gentle blues",
+  APOCALYPTIC: "desaturated grays, sickly yellows, deep reds",
+  DIVINE: "radiant whites, heavenly golds, soft blues",
+  FOREBODING: "cold blues, dark grays, muted earth tones",
+  ACTION: "high contrast, bold shadows, fiery oranges",
+}
+
+/**
+ * Technical close for all prompts - camera and quality specs
+ */
+const TECHNICAL_CLOSE = "8k resolution, masterful composition, biblical era Middle Eastern setting"
 
 /**
  * Negative prompt to avoid unwanted elements
@@ -64,6 +100,7 @@ export interface PromptBuilderOptions {
   mood: ShotMood
   visualStyle: VisualStyle
   aspectRatio: "LANDSCAPE" | "PORTRAIT"
+  composition?: string // e.g., "wide angle", "close-up", "medium shot"
   characterDescriptions?: string[]
   referenceContext?: string
 }
@@ -71,38 +108,52 @@ export interface PromptBuilderOptions {
 /**
  * Build a comprehensive image generation prompt
  *
- * Structure:
- * [Scene Description], [Mood], [Technical Base], [Visual Style Keywords]
+ * Format:
+ * [MOOD] cinematic scene of [SUBJECT/ACTION], [COMPOSITION], [KEY VISUAL DETAILS],
+ * [ATMOSPHERIC ELEMENTS], [EMOTIONAL/SPIRITUAL TONE], [COLOR PALETTE], [TECHNICAL CLOSE]
  */
 export function buildImagePrompt(options: PromptBuilderOptions): string {
   const {
     description,
     mood,
     visualStyle,
+    composition,
     characterDescriptions = [],
     referenceContext,
   } = options
 
   const parts: string[] = []
 
-  // 1. Start with the scene description
-  parts.push(description)
+  // 1. [MOOD] cinematic scene of [SUBJECT/ACTION]
+  const moodPrefix = MOOD_PREFIX[mood]
+  parts.push(`${moodPrefix} cinematic scene of ${description}`)
 
-  // 2. Add mood modifier for emotional tone
-  parts.push(MOOD_MODIFIERS[mood])
+  // 2. [COMPOSITION] - if provided, otherwise skip
+  if (composition) {
+    parts.push(composition)
+  }
 
-  // 3. Add technical base
-  parts.push(TECHNICAL_BASE)
-
-  // 4. Add visual style keywords (this is what controls the look)
+  // 3. [KEY VISUAL DETAILS] - from visual style
   parts.push(VISUAL_STYLE_MODIFIERS[visualStyle])
 
-  // 5. Add character descriptions if provided
+  // 4. [ATMOSPHERIC ELEMENTS]
+  parts.push(MOOD_ATMOSPHERE[mood])
+
+  // 5. [EMOTIONAL/SPIRITUAL TONE]
+  parts.push(MOOD_EMOTIONAL_TONE[mood])
+
+  // 6. [COLOR PALETTE]
+  parts.push(MOOD_COLOR_PALETTE[mood])
+
+  // 7. [TECHNICAL CLOSE]
+  parts.push(TECHNICAL_CLOSE)
+
+  // Add character descriptions if provided
   if (characterDescriptions.length > 0) {
     parts.push(...characterDescriptions)
   }
 
-  // 6. Add reference context if using a reference image
+  // Add reference context if using a reference image
   if (referenceContext) {
     parts.push(`maintaining visual consistency with: ${referenceContext}`)
   }
@@ -138,13 +189,26 @@ export function getVisualStyleOptions(): { value: VisualStyle; label: string; de
 export function getStyleGuideComponents() {
   return {
     visualStyles: VISUAL_STYLE_MODIFIERS,
-    moods: MOOD_MODIFIERS,
-    technicalBase: TECHNICAL_BASE,
+    moodPrefixes: MOOD_PREFIX,
+    moodAtmosphere: MOOD_ATMOSPHERE,
+    moodEmotionalTone: MOOD_EMOTIONAL_TONE,
+    moodColorPalette: MOOD_COLOR_PALETTE,
+    technicalClose: TECHNICAL_CLOSE,
     negativePrompt: NEGATIVE_PROMPT,
   }
 }
 
-// Legacy exports for backwards compatibility (Camera modifiers - kept for video mode later)
+// Legacy exports for backwards compatibility
+export const MOOD_MODIFIERS: Record<ShotMood, string> = {
+  DRAMATIC: `${MOOD_PREFIX.DRAMATIC} - ${MOOD_ATMOSPHERE.DRAMATIC}, ${MOOD_EMOTIONAL_TONE.DRAMATIC}`,
+  PEACEFUL: `${MOOD_PREFIX.PEACEFUL} - ${MOOD_ATMOSPHERE.PEACEFUL}, ${MOOD_EMOTIONAL_TONE.PEACEFUL}`,
+  APOCALYPTIC: `${MOOD_PREFIX.APOCALYPTIC} - ${MOOD_ATMOSPHERE.APOCALYPTIC}, ${MOOD_EMOTIONAL_TONE.APOCALYPTIC}`,
+  DIVINE: `${MOOD_PREFIX.DIVINE} - ${MOOD_ATMOSPHERE.DIVINE}, ${MOOD_EMOTIONAL_TONE.DIVINE}`,
+  FOREBODING: `${MOOD_PREFIX.FOREBODING} - ${MOOD_ATMOSPHERE.FOREBODING}, ${MOOD_EMOTIONAL_TONE.FOREBODING}`,
+  ACTION: `${MOOD_PREFIX.ACTION} - ${MOOD_ATMOSPHERE.ACTION}, ${MOOD_EMOTIONAL_TONE.ACTION}`,
+}
+
+// Camera modifiers - kept for video mode later
 export const CAMERA_MODIFIERS: Record<string, string> = {
   STATIC: "perfectly composed shot",
   PAN_LEFT: "cinematic composition with depth",

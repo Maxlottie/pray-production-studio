@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { AssistantPanel } from "./AssistantPanel"
 import { AssistantToggle } from "./AssistantToggle"
+import { AssistantContextProvider } from "./AssistantContext"
 
 interface AssistantProviderProps {
   projectId: string
@@ -16,7 +17,7 @@ export function AssistantProvider({
   const [isOpen, setIsOpen] = useState(false)
 
   return (
-    <>
+    <AssistantContextProvider>
       {children}
       <AssistantToggle onClick={() => setIsOpen(!isOpen)} isOpen={isOpen} />
       <AssistantPanel
@@ -24,6 +25,6 @@ export function AssistantProvider({
         isOpen={isOpen}
         onClose={() => setIsOpen(false)}
       />
-    </>
+    </AssistantContextProvider>
   )
 }
