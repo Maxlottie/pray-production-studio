@@ -10,7 +10,9 @@ import { ScriptViewer } from "./ScriptViewer"
 import { ShotList } from "./ShotList"
 import type { Project, Script, Scene, Shot, CameraMovement, ShotMood, ShotStatus } from "@prisma/client"
 
-type SceneWithShots = Scene & { shots: Shot[] }
+// Use serialized types where Decimal is converted to number for client components
+type SerializedShot = Omit<Shot, "duration"> & { duration: number }
+type SceneWithShots = Scene & { shots: SerializedShot[] }
 
 interface ShotsPageClientProps {
   project: Project & {

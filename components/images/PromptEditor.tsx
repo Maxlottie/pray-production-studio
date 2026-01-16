@@ -28,8 +28,11 @@ import {
 } from "@/lib/prompts/image-prompt-builder"
 import type { Shot, ShotMood, VisualStyle } from "@prisma/client"
 
+// Use serialized types where Decimal is converted to number for client components
+type SerializedShot = Omit<Shot, "duration"> & { duration: number }
+
 interface PromptEditorProps {
-  shot: Shot | null
+  shot: SerializedShot | null
   aspectRatio: "LANDSCAPE" | "PORTRAIT"
   open: boolean
   onOpenChange: (open: boolean) => void
