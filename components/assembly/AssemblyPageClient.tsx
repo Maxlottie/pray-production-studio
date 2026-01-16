@@ -18,7 +18,10 @@ import type {
   ProjectAudio,
 } from "@prisma/client"
 
-type ShotWithMedia = Shot & {
+// Use serialized types where Decimal is converted to number for client components
+type SerializedShot = Omit<Shot, "duration"> & { duration: number }
+
+type ShotWithMedia = SerializedShot & {
   images: ImageGeneration[]
   videos: VideoGeneration[]
 }
@@ -28,7 +31,7 @@ type SceneWithShots = Scene & {
 }
 
 interface AssemblyPageClientProps {
-  project: Project & {
+  project: Omit<Project, "scenes"> & {
     scenes: SceneWithShots[]
     audio: ProjectAudio | null
   }
