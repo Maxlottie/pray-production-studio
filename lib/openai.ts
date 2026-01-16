@@ -49,7 +49,7 @@ export async function generateImage(
       n: 1,
       size: gptImageSize as "1024x1024" | "1536x1024" | "1024x1536",
       quality: quality === "hd" ? "high" : "medium",
-    } as Parameters<typeof openai.images.generate>[0])
+    } as Parameters<typeof openai.images.generate>[0]) as OpenAI.Images.ImagesResponse
 
     if (!response.data || response.data.length === 0) {
       throw new Error("No image data returned from GPT Image")
@@ -94,7 +94,7 @@ export async function generateImage(
         n: 1,
         size: gptImageSize as "1024x1024" | "1536x1024" | "1024x1536",
         quality: quality === "hd" ? "high" : "medium",
-      } as Parameters<typeof openai.images.generate>[0])
+      } as Parameters<typeof openai.images.generate>[0]) as OpenAI.Images.ImagesResponse
 
       if (!response.data || response.data.length === 0) {
         throw new Error("No image data returned from GPT Image 1")
