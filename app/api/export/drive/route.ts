@@ -67,12 +67,18 @@ export async function POST(request: NextRequest) {
       folder: "images" | "videos" | "audio" | "root"
     }[] = []
 
+    // Convert shots with Decimal duration to number for XML generation
+    const shotsWithNumberDuration = project.shots.map(shot => ({
+      ...shot,
+      duration: Number(shot.duration),
+    }))
+
     // Add Premiere XML
     const xml = generatePremiereXML({
       id: project.id,
       title: project.title,
       aspectRatio: project.aspectRatio as "LANDSCAPE" | "PORTRAIT",
-      shots: project.shots,
+      shots: shotsWithNumberDuration,
       narrationUrl: project.audio?.narrationUrl,
       musicUrl: project.audio?.musicUrl,
     })
