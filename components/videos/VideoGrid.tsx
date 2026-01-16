@@ -25,7 +25,8 @@ interface VideoGridProps {
     shotId: string,
     imageId: string,
     provider: VideoProvider,
-    motionType: MotionType
+    motionType: MotionType,
+    customPrompt?: string
   ) => void
   onSelectVideo: (shotId: string, videoId: string) => void
   onRetry: (videoId: string) => void

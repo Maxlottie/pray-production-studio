@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import Image from "next/image"
 import {
   Play,
@@ -10,10 +10,13 @@ import {
   AlertCircle,
   Check,
   MoreVertical,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Textarea } from "@/components/ui/textarea"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,6 +26,7 @@ import {
 import { MotionSelector } from "./MotionSelector"
 import { ProviderSelector } from "./ProviderSelector"
 import { cn } from "@/lib/utils"
+import { getDisplayUrl } from "@/lib/image-url"
 import type {
   Shot,
   ImageGeneration,
@@ -30,6 +34,18 @@ import type {
   VideoProvider,
   MotionType,
 } from "@prisma/client"
+
+// Motion type to prompt mapping (mirrors minimax.ts)
+const MOTION_PROMPTS: Record<MotionType, string> = {
+  SUBTLE: "very subtle movement, barely perceptible motion, cinematic stillness",
+  PAN_LEFT: "smooth pan left camera movement, cinematic pan",
+  PAN_RIGHT: "smooth pan right camera movement, cinematic pan",
+  ZOOM_IN: "slow zoom in, dramatic focus, cinematic zoom",
+  ZOOM_OUT: "slow zoom out, revealing epic scale, cinematic pullback",
+  PUSH_IN: "dramatic push in, dolly forward, cinematic approach",
+  HAND_HELD: "subtle handheld movement, organic camera shake, documentary feel",
+  CUSTOM: "cinematic camera movement",
+}
 
 // Use serialized types where Decimal is converted to number for client components
 type SerializedShot = Omit<Shot, "duration"> & { duration: number }
@@ -45,7 +61,8 @@ interface VideoCardProps {
     shotId: string,
     imageId: string,
     provider: VideoProvider,
-    motionType: MotionType
+    motionType: MotionType,
+    customPrompt?: string
   ) => void
   onSelectVideo: (shotId: string, videoId: string) => void
   onRetry: (videoId: string) => void
@@ -66,10 +83,20 @@ export function VideoCard({
   const [isPlaying, setIsPlaying] = useState(false)
   const [provider, setProvider] = useState<VideoProvider>("MINIMAX")
   const [motionType, setMotionType] = useState<MotionType>("SUBTLE")
+  const [showPromptEditor, setShowPromptEditor] = useState(false)
+  const [customPrompt, setCustomPrompt] = useState("")
 
   const selectedImage = shot.images.find((img) => img.selected)
   const selectedVideo = shot.videos.find((vid) => vid.selected)
   const hasVideos = shot.videos.length > 0
+
+  // Build the default prompt when motion type changes
+  const defaultPrompt = `${shot.description}, ${MOTION_PROMPTS[motionType]}`
+
+  // Initialize custom prompt with default when motion type changes
+  useEffect(() => {
+    setCustomPrompt(defaultPrompt)
+  }, [motionType, shot.description])
 
   // Get status info
   const getStatusInfo = (video: VideoGeneration) => {
@@ -100,8 +127,12 @@ export function VideoCard({
 
   const handleGenerate = () => {
     if (selectedImage) {
-      onGenerate(shot.id, selectedImage.id, provider, motionType)
+      onGenerate(shot.id, selectedImage.id, provider, motionType, customPrompt)
     }
+  }
+
+  const handleResetPrompt = () => {
+    setCustomPrompt(defaultPrompt)
   }
 
   return (
@@ -135,7 +166,7 @@ export function VideoCard({
         {selectedImage ? (
           <div className="relative aspect-video rounded-md overflow-hidden bg-primary/5">
             <Image
-              src={selectedImage.imageUrl}
+              src={getDisplayUrl(selectedImage.imageUrl)}
               alt={`Shot ${shot.shotIndex + 1}`}
               fill
               className="object-cover"
@@ -146,9 +177,6 @@ export function VideoCard({
             <p className="text-sm text-[#6b6b6b]">No image selected</p>
           </div>
         )}
-
-        {/* Description */}
-        <p className="text-xs text-[#6b6b6b] line-clamp-2">{shot.description}</p>
 
         {/* Provider & Motion Type */}
         <div className="space-y-2">
@@ -162,6 +190,49 @@ export function VideoCard({
             onChange={setMotionType}
             disabled={isGenerating}
           />
+        </div>
+
+        {/* Motion Prompt Editor */}
+        <div className="space-y-2">
+          <button
+            onClick={() => setShowPromptEditor(!showPromptEditor)}
+            className="flex items-center justify-between w-full text-xs text-[#6b6b6b] hover:text-[#2d2d2d] transition-colors"
+          >
+            <span className="font-medium">Motion Prompt</span>
+            {showPromptEditor ? (
+              <ChevronUp className="h-4 w-4" />
+            ) : (
+              <ChevronDown className="h-4 w-4" />
+            )}
+          </button>
+
+          {showPromptEditor ? (
+            <div className="space-y-2">
+              <Textarea
+                value={customPrompt}
+                onChange={(e) => setCustomPrompt(e.target.value)}
+                placeholder="Describe the motion and camera movement..."
+                className="min-h-[80px] text-xs"
+                disabled={isGenerating}
+              />
+              <div className="flex justify-end">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleResetPrompt}
+                  disabled={isGenerating || customPrompt === defaultPrompt}
+                  className="text-xs h-7"
+                >
+                  <RefreshCw className="h-3 w-3 mr-1" />
+                  Reset to Default
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <p className="text-xs text-[#9ca3af] line-clamp-2 bg-primary/5 p-2 rounded">
+              {customPrompt || defaultPrompt}
+            </p>
+          )}
         </div>
 
         {/* Video Preview / Status */}

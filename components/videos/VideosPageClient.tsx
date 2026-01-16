@@ -71,7 +71,8 @@ export function VideosPageClient({ project, scenes }: VideosPageClientProps) {
       shotId: string,
       imageId: string,
       provider: VideoProvider,
-      motionType: MotionType
+      motionType: MotionType,
+      customPrompt?: string
     ) => {
       setGeneratingShots((prev) => new Set(prev).add(shotId))
 
@@ -79,7 +80,7 @@ export function VideosPageClient({ project, scenes }: VideosPageClientProps) {
         const response = await fetch("/api/videos/generate", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ shotId, imageId, provider, motionType }),
+          body: JSON.stringify({ shotId, imageId, provider, motionType, customPrompt }),
         })
 
         if (!response.ok) {

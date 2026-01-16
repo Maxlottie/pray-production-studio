@@ -1,19 +1,14 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { requireAuth } from "@/lib/auth"
 import * as minimax from "@/lib/minimax"
 import * as runway from "@/lib/runway"
 import type { VideoProvider, MotionType } from "@prisma/client"
 
 export async function POST(request: NextRequest) {
   try {
-    const user = await requireAuth()
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
-
+    // Auth temporarily disabled for demo
     const body = await request.json()
-    const { shotId, imageId, provider = "MINIMAX", motionType = "SUBTLE" } = body
+    const { shotId, imageId, provider = "MINIMAX", motionType = "SUBTLE", customPrompt } = body
 
     if (!shotId || !imageId) {
       return NextResponse.json(
@@ -55,11 +50,16 @@ export async function POST(request: NextRequest) {
     try {
       let taskId: string
 
+      // Use custom prompt if provided, otherwise build from shot description + motion params
+      const buildPrompt = (motionParams: { prompt: string }) => {
+        return customPrompt || `${shot.description}, ${motionParams.prompt}`
+      }
+
       if (provider === "MINIMAX") {
         const motionParams = minimax.getMotionParameters(motionType)
         const result = await minimax.generateVideo({
           imageUrl: image.imageUrl,
-          prompt: `${shot.description}, ${motionParams.prompt}`,
+          prompt: buildPrompt(motionParams),
           motionType,
         })
         taskId = result.taskId
@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
         const motionParams = runway.getMotionParameters(motionType)
         const result = await runway.generateVideo({
           imageUrl: image.imageUrl,
-          prompt: `${shot.description}, ${motionParams.prompt}`,
+          prompt: buildPrompt(motionParams),
           motionType,
         })
         taskId = result.taskId
