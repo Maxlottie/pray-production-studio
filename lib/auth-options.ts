@@ -4,7 +4,8 @@ import { PrismaAdapter } from "@auth/prisma-adapter"
 import { prisma } from "@/lib/prisma"
 
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma),
+  // Temporarily disabled adapter for debugging
+  // adapter: PrismaAdapter(prisma),
   session: {
     strategy: "jwt",
   },
@@ -16,23 +17,13 @@ export const authOptions: NextAuthOptions = {
   ],
   callbacks: {
     async signIn({ profile }) {
-      // Temporarily allow all emails for testing
-      // TODO: Restore @pray.com restriction after auth is working
       console.log("[Auth] Sign in attempt:", profile?.email)
       return true
-
-      // Original restriction (commented out for testing):
-      // if (process.env.NODE_ENV === "development") {
-      //   return true
-      // }
-      // if (profile?.email?.endsWith("@pray.com")) {
-      //   return true
-      // }
-      // return false
     },
-    async jwt({ token, user }) {
-      if (user) {
-        token.id = user.id
+    async jwt({ token, user, profile }) {
+      if (profile) {
+        token.id = profile.sub
+        token.email = profile.email
       }
       return token
     },
@@ -47,4 +38,5 @@ export const authOptions: NextAuthOptions = {
     signIn: "/login",
     error: "/login",
   },
+  debug: true, // Enable debug mode to see what's happening
 }
