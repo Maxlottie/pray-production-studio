@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { requireAuth } from "@/lib/auth"
 import Anthropic from "@anthropic-ai/sdk"
 import { buildAssistantSystemPrompt, ASSISTANT_TOOLS } from "@/lib/prompts/assistant-system"
 import { buildImagePrompt } from "@/lib/prompts/image-prompt-builder"
@@ -341,11 +340,7 @@ async function processToolCall(
 
 export async function POST(request: NextRequest) {
   try {
-    const user = await requireAuth()
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
-
+    // Auth temporarily disabled for demo
     const body = await request.json()
     const { projectId, message, history = [], currentPage = "images" } = body
 
@@ -360,7 +355,6 @@ export async function POST(request: NextRequest) {
     const project = await prisma.project.findFirst({
       where: {
         id: projectId,
-        createdById: user.id,
       },
       include: {
         scripts: {
@@ -539,11 +533,7 @@ export async function POST(request: NextRequest) {
 // GET - Fetch conversation history
 export async function GET(request: NextRequest) {
   try {
-    const user = await requireAuth()
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
-
+    // Auth temporarily disabled for demo
     const { searchParams } = new URL(request.url)
     const projectId = searchParams.get("projectId")
 

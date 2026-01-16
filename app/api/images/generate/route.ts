@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { requireAuth } from "@/lib/auth"
 import { generateImage, downloadImage } from "@/lib/openai"
 import { uploadBuffer, generateProjectKey } from "@/lib/s3"
 import {
@@ -14,11 +13,7 @@ const IMAGES_PER_GENERATION = 4
 
 export async function POST(request: NextRequest) {
   try {
-    const user = await requireAuth()
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
-
+    // Auth temporarily disabled for demo
     const body = await request.json()
     const { shotId, customPrompt, count = IMAGES_PER_GENERATION, regenerate = false } = body
 

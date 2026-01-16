@@ -248,7 +248,7 @@ export function ShotsPageClient({ project }: ShotsPageClientProps) {
               disabled={!allApproved}
               onClick={() => router.push(`/projects/${project.id}/images`)}
             >
-              Continue to Images
+              Advance to Storyboarding
             </Button>
           </div>
         )}
