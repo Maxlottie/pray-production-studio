@@ -4,6 +4,7 @@ import { useState } from "react"
 import { useRouter, usePathname } from "next/navigation"
 import { AssistantPanel } from "./AssistantPanel"
 import { AssistantToggle } from "./AssistantToggle"
+import { AssistantContextProvider } from "./AssistantContext"
 
 interface ProjectAssistantWrapperProps {
   projectId: string
@@ -32,7 +33,7 @@ export function ProjectAssistantWrapper({
   }
 
   return (
-    <>
+    <AssistantContextProvider>
       {children}
 
       {/* AI Assistant - Available on all project pages */}
@@ -47,6 +48,6 @@ export function ProjectAssistantWrapper({
         currentPage={getCurrentPage()}
         onRefresh={handleRefresh}
       />
-    </>
+    </AssistantContextProvider>
   )
 }
