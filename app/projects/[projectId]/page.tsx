@@ -84,15 +84,6 @@ export default async function ProjectPage({
 
   const stages = [
     {
-      title: "Audio",
-      description: "Record or generate narration and background music",
-      icon: Music,
-      href: `/projects/${project.id}/audio`,
-      status: "available" as const,
-      complete: false,
-      progress: null,
-    },
-    {
       title: "Shot Planning",
       description: "Upload script and plan your shot list",
       icon: Film,
@@ -100,6 +91,15 @@ export default async function ProjectPage({
       status: "available" as const,
       complete: totalShots > 0 && approvedShots === totalShots,
       progress: totalShots > 0 ? `${approvedShots}/${totalShots} approved` : null,
+    },
+    {
+      title: "Audio",
+      description: "Record or generate narration and background music (optional)",
+      icon: Music,
+      href: `/projects/${project.id}/audio`,
+      status: "available" as const,
+      complete: false,
+      progress: null,
     },
     {
       title: "Image Generation",
