@@ -1,33 +1,23 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { getSession } from "@/lib/auth"
 import { AspectRatio } from "@prisma/client"
 
-// Helper to get or create a demo user (auth temporarily disabled)
-async function getDemoUserId(): Promise<string> {
-  const demoEmail = "demo@pray.com"
-
-  // Use upsert to handle race conditions
-  const user = await prisma.user.upsert({
-    where: { email: demoEmail },
-    update: {}, // Don't update anything if exists
-    create: {
-      email: demoEmail,
-      name: "Demo User",
-    },
-  })
-
-  console.log("[API] Using demo user:", user.id)
-  return user.id
-}
+// Demo user email for auth-disabled mode
+const DEMO_EMAIL = "demo@pray.com"
 
 // GET /api/projects - List all projects for the current user
 export async function GET() {
   try {
-    const session = await getSession()
-
-    // Auth temporarily disabled - use demo user if no session
-    const userId = session?.user?.id || await getDemoUserId()
+    // Auth temporarily disabled - always use demo user
+    const demoUser = await prisma.user.upsert({
+      where: { email: DEMO_EMAIL },
+      update: {},
+      create: {
+        email: DEMO_EMAIL,
+        name: "Demo User",
+      },
+    })
+    const userId = demoUser.id
 
     const projects = await prisma.project.findMany({
       where: {
@@ -65,35 +55,16 @@ export async function GET() {
 // POST /api/projects - Create a new project
 export async function POST(request: NextRequest) {
   try {
-    const session = await getSession()
-
-    // Auth temporarily disabled - use demo user if no session
-    let userId: string
-
-    if (session?.user?.id) {
-      userId = session.user.id
-      console.log("[API] Using session user:", userId)
-    } else {
-      // Create demo user first, then get ID
-      try {
-        const demoUser = await prisma.user.upsert({
-          where: { email: "demo@pray.com" },
-          update: {},
-          create: {
-            email: "demo@pray.com",
-            name: "Demo User",
-          },
-        })
-        userId = demoUser.id
-        console.log("[API] Created/found demo user:", userId)
-      } catch (userError) {
-        console.error("[API] Failed to create demo user:", userError)
-        return NextResponse.json(
-          { error: `Failed to create demo user: ${userError instanceof Error ? userError.message : "Unknown"}` },
-          { status: 500 }
-        )
-      }
-    }
+    // Auth temporarily disabled - always use demo user
+    const demoUser = await prisma.user.upsert({
+      where: { email: DEMO_EMAIL },
+      update: {},
+      create: {
+        email: DEMO_EMAIL,
+        name: "Demo User",
+      },
+    })
+    const userId = demoUser.id
 
     const body = await request.json()
     const { title, aspectRatio } = body
@@ -115,17 +86,6 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       )
     }
-
-    // Verify user exists before creating project
-    const userExists = await prisma.user.findUnique({ where: { id: userId } })
-    if (!userExists) {
-      console.error("[API] User not found with ID:", userId)
-      return NextResponse.json(
-        { error: `User not found: ${userId}` },
-        { status: 500 }
-      )
-    }
-    console.log("[API] Verified user exists:", userExists.email)
 
     const project = await prisma.project.create({
       data: {
