@@ -12,10 +12,13 @@ import { getSession } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { prisma } from "@/lib/prisma"
 import {
-  MASTER_STYLE_PROMPT,
   MOOD_MODIFIERS,
   NEGATIVE_PROMPT,
+  getStyleGuideComponents,
 } from "@/lib/prompts/image-prompt-builder"
+
+// Get the technical base as master style
+const { technicalBase: MASTER_STYLE_PROMPT } = getStyleGuideComponents()
 
 export default async function SettingsPage() {
   const session = await getSession()
