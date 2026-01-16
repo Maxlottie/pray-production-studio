@@ -6,13 +6,11 @@ import { Button } from "@/components/ui/button"
 import { ProjectGrid } from "@/components/dashboard/ProjectGrid"
 import { prisma } from "@/lib/prisma"
 import { getSession } from "@/lib/auth"
-import { redirect } from "next/navigation"
 
-async function getProjects(userId: string) {
+// Get all projects (auth temporarily disabled for demo)
+async function getProjects(userId?: string) {
   const projects = await prisma.project.findMany({
-    where: {
-      createdById: userId,
-    },
+    where: userId ? { createdById: userId } : undefined,
     include: {
       createdBy: {
         select: {
@@ -32,11 +30,8 @@ async function getProjects(userId: string) {
 export default async function DashboardPage() {
   const session = await getSession()
 
-  if (!session?.user?.id) {
-    redirect("/login")
-  }
-
-  const projects = await getProjects(session.user.id)
+  // Auth temporarily disabled - show all projects for demo
+  const projects = await getProjects(session?.user?.id)
 
   return (
     <AppShell>

@@ -3,18 +3,32 @@ import { prisma } from "@/lib/prisma"
 import { getSession } from "@/lib/auth"
 import { AspectRatio } from "@prisma/client"
 
+// Helper to get or create a demo user (auth temporarily disabled)
+async function getDemoUserId(): Promise<string> {
+  const demoEmail = "demo@pray.com"
+  let user = await prisma.user.findUnique({ where: { email: demoEmail } })
+  if (!user) {
+    user = await prisma.user.create({
+      data: {
+        email: demoEmail,
+        name: "Demo User",
+      },
+    })
+  }
+  return user.id
+}
+
 // GET /api/projects - List all projects for the current user
 export async function GET() {
   try {
     const session = await getSession()
 
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
+    // Auth temporarily disabled - use demo user if no session
+    const userId = session?.user?.id || await getDemoUserId()
 
     const projects = await prisma.project.findMany({
       where: {
-        createdById: session.user.id,
+        createdById: userId,
       },
       include: {
         createdBy: {
@@ -50,9 +64,8 @@ export async function POST(request: NextRequest) {
   try {
     const session = await getSession()
 
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
+    // Auth temporarily disabled - use demo user if no session
+    const userId = session?.user?.id || await getDemoUserId()
 
     const body = await request.json()
     const { title, aspectRatio } = body
@@ -79,7 +92,7 @@ export async function POST(request: NextRequest) {
       data: {
         title: title.trim(),
         aspectRatio: (aspectRatio as AspectRatio) || "LANDSCAPE",
-        createdById: session.user.id,
+        createdById: userId,
       },
       include: {
         createdBy: {
