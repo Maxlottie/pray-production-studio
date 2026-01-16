@@ -20,9 +20,11 @@ export const authOptions: NextAuthOptions = {
       console.log("[Auth] Sign in attempt:", profile?.email)
       return true
     },
-    async jwt({ token, user, profile }) {
-      if (profile) {
+    async jwt({ token, profile }) {
+      if (profile?.sub) {
         token.id = profile.sub
+      }
+      if (profile?.email) {
         token.email = profile.email
       }
       return token
