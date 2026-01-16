@@ -1,17 +1,11 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { getSession } from "@/lib/auth"
 import { parseScript, ParsedScript } from "@/lib/anthropic"
 import { CameraMovement, ShotMood, Prisma } from "@prisma/client"
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getSession()
-
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
-
+    // Auth temporarily disabled for demo
     const body = await request.json()
     const { projectId, scriptText, sourceFileName } = body
 
@@ -22,11 +16,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Verify project ownership
+    // Find project (auth disabled - no user filter)
     const project = await prisma.project.findFirst({
       where: {
         id: projectId,
-        createdById: session.user.id,
       },
     })
 

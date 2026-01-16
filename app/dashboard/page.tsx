@@ -5,12 +5,10 @@ import { Header } from "@/components/layout/Header"
 import { Button } from "@/components/ui/button"
 import { ProjectGrid } from "@/components/dashboard/ProjectGrid"
 import { prisma } from "@/lib/prisma"
-import { getSession } from "@/lib/auth"
 
 // Get all projects (auth temporarily disabled for demo)
-async function getProjects(userId?: string) {
+async function getProjects() {
   const projects = await prisma.project.findMany({
-    where: userId ? { createdById: userId } : undefined,
     include: {
       createdBy: {
         select: {
@@ -28,10 +26,8 @@ async function getProjects(userId?: string) {
 }
 
 export default async function DashboardPage() {
-  const session = await getSession()
-
-  // Auth temporarily disabled - show all projects for demo
-  const projects = await getProjects(session?.user?.id)
+  // Auth temporarily disabled - show all projects
+  const projects = await getProjects()
 
   return (
     <AppShell>
